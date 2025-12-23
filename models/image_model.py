@@ -3,8 +3,8 @@ from sqlalchemy.orm import mapped_column
 
 from database.init import Base
 
-class Image(Base):
-    __tavlename__ = 'images'
+class ImageModel(Base):
+    __tablename__ = 'images'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     path: Mapped[str] = mapped_column(nullable=False)
