@@ -1,3 +1,4 @@
+import os
 from flask import request,jsonify,make_response
 from flask_restful import Resource
 
@@ -11,23 +12,14 @@ class ImageResource(Resource):
         if image is None:
             return make_response(jsonify({"message": "Image not found"}), 404)
         return make_response(jsonify(image), 200)
-    
-    def post(self):
-        data = request.get_json(force=True)
-        if data is None or len(data) == 0:
-            return make_response(jsonify({"message": "No input data provided"}), 400)
-        new_image = ImageModel(**data)
-        db_session.add(new_image)
-        return make_response(jsonify({"message": "Image created successfully"}), 201)
 
     def put(self, image_id):
         image = db_session.query(ImageModel).get(image_id)
         if image is None:
             return make_response(jsonify({"message": "Image not found"}), 404)
         data = request.get_json(force=True)
-        if data is None or len(data) == 0:
+        if not data:
             return make_response(jsonify({"message": "No input data provided"}), 400)
-        updated_image = ImageModel(**data)
         for key, value in data.items():
             setattr(image, key, value)
         return make_response(jsonify({"message": "Image updated successfully"}), 200)
@@ -36,6 +28,8 @@ class ImageResource(Resource):
         image = db_session.query(ImageModel).get(image_id)
         if image is None:
             return make_response(jsonify({"message": "Image not found"}), 404)
+        if os.path.exists(image.path):
+            os.remove(image.path)
         db_session.delete(image)
         return make_response(jsonify({"message": "Image deleted successfully"}), 200)
 
