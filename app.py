@@ -30,6 +30,9 @@ api.add_resource(PredictionListResource, '/api/predictions')
 api.add_resource(FillLevelResource, '/api/fill_levels/<int:fill_level_id>')
 api.add_resource(FillLevelListResource, '/api/fill_levels')
 
+@app.route('/')
+def home():
+    return "Welcome to the Image Classification API"
 
 @app.route('/api/images/predict', methods=['POST'])
 def predict_image():
