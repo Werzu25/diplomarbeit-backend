@@ -12,6 +12,8 @@ from image_classification.modelTools import predict, train_model
 app = Flask(__name__)
 api = Api(app)
 
+init_db()
+
 api.add_resource(ImageResource, '/api/images/<int:image_id>')
 api.add_resource(ImageListResource, '/api/images')
 
@@ -34,7 +36,6 @@ def save_image():
     pass
 
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
 
 @app.teardown_request
