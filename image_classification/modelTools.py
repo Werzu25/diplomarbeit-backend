@@ -7,8 +7,8 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision.models import ResNet50_Weights
 
-from ImageClassifierDataset import ImageClassifierDataset
-from ImageClassifierModel import ImageClassifierModel
+from .ImageClassifierDataset import ImageClassifierDataset
+from .ImageClassifierModel import ImageClassifierModel
 
 # ---- setup ----
 weights = ResNet50_Weights.DEFAULT
