@@ -1,11 +1,4 @@
 # syntax=docker/dockerfile:1
-
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
-
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
-
 ARG PYTHON_VERSION=3.12.9
 FROM python:${PYTHON_VERSION}-slim as base
 
@@ -25,35 +18,35 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/go/dockerfile-user-best-practices/
 ARG UID=10001
 RUN adduser \
     --disabled-password \
     --gecos "" \
-    --home "/nonexistent" \
     --shell "/sbin/nologin" \
-    --no-create-home \
     --uid "${UID}" \
     appuser
 
+# Change ownership of the app directory to appuser BEFORE installing dependencies
+RUN chown -R appuser:appuser /app
+
+# Switch to the non-privileged user BEFORE running uv commands
+USER appuser
+
 # Install dependencies
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/home/appuser/.cache/uv,uid=${UID} \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --locked --no-install-project
 
 # Copy the source code into the container.
-COPY . .
+COPY --chown=appuser:appuser . .
 
 # Sync the project
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/home/appuser/.cache/uv,uid=${UID} \
     uv sync --locked
-
-# Switch to the non-privileged user to run the application.
-USER appuser
 
 # Expose the port that the application listens on.
 EXPOSE 8000
 
 # Run the application.
-CMD ["gunicorn", "app:app", "--bind=0.0.0.0:8000"]
+CMD ["uv", "run", "gunicorn", "app:app", "--bind=0.0.0.0:8000"]
