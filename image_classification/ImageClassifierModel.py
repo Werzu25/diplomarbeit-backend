@@ -3,7 +3,7 @@ from torchvision.models import resnet50, ResNet50_Weights
 
 
 class ImageClassifierModel(nn.Module):
-    def __init__(self, num_classes=53):
+    def __init__(self, num_classes=6):
         super(ImageClassifierModel, self).__init__()
         self.num_classes = num_classes
         self.weights = ResNet50_Weights.DEFAULT
