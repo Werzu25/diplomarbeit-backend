@@ -2,12 +2,13 @@
 import os
 import torch
 import tqdm
+from dotenv import load_dotenv
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision.models import ResNet50_Weights
 
-from image_classification.ImageClassifierDataset import ImageClassifierDataset
-from image_classification.ImageClassifierModel import ImageClassifierModel
+from ImageClassifierDataset import ImageClassifierDataset
+from ImageClassifierModel import ImageClassifierModel
 
 # ---- setup ----
 weights = ResNet50_Weights.DEFAULT
@@ -128,7 +129,7 @@ def train_model(
     # Better schedule for classification than ReduceLROnPlateau in many cases
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=num_epochs)
 
-    scaler = torch.cuda.amp.GradScaler(enabled=AMP_ENABLED)
+    scaler = torch.amp.GradScaler('cuda', enabled=AMP_ENABLED)
 
     best_val_acc = -1.0
     history = {"train_loss": [], "val_loss": [], "val_acc": []}
@@ -145,7 +146,7 @@ def train_model(
 
             optimizer.zero_grad(set_to_none=True)
 
-            with torch.cuda.amp.autocast(enabled=AMP_ENABLED):
+            with torch.amp.autocast('cuda',enabled=AMP_ENABLED):
                 outputs = model(images)
                 loss = criterion(outputs, labels)
 
@@ -192,3 +193,17 @@ def predict(input_image, model_weights_path, topk=4):
         top_probs, top_idxs = torch.topk(probs, k=topk)
 
     return [(class_names[i], float(p)) for i, p in zip(top_idxs.tolist(), top_probs.tolist())]
+
+if __name__ == "__main__":
+    # Example usage: train the model
+    load_dotenv()
+    data_folder = os.getenv("DATA_FOLDER", "./data")
+    train_model(
+        datafolder=data_folder,
+        num_epochs=5,
+        learning_rate=0.01,
+        batch_size=32,
+        num_classes=53,
+        model_path="models/classifier_best.pth",
+        label_smoothing=0.1,
+    )
