@@ -5,7 +5,6 @@ from flask_restful import Resource
 from database.init import db_session
 from models.image_model import ImageModel
 
-
 class ImageResource(Resource):
     def get(self, image_id):
         image = db_session.query(ImageModel).get(image_id)
