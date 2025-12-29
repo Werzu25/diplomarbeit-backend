@@ -5,13 +5,14 @@ import tqdm
 from dotenv import load_dotenv
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision.models import ResNet50_Weights
+from torchvision.models import ResNet152_Weights
 
-from .ImageClassifierDataset import ImageClassifierDataset
-from .ImageClassifierModel import ImageClassifierModel
+if __name__ != "__main__":
+    from .ImageClassifierDataset import ImageClassifierDataset
+    from .ImageClassifierModel import ImageClassifierModel
 
 # ---- setup ----
-weights = ResNet50_Weights.DEFAULT
+weights = ResNet152_Weights.DEFAULT
 transforms = weights.transforms()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -195,6 +196,8 @@ def predict(input_image, model_weights_path, topk=4):
     return [(class_names[i], float(p)) for i, p in zip(top_idxs.tolist(), top_probs.tolist())]
 
 if __name__ == "__main__":
+    from ImageClassifierDataset import ImageClassifierDataset
+    from ImageClassifierModel import ImageClassifierModel
     # Example usage: train the model
     load_dotenv()
     data_folder = os.getenv("DATA_FOLDER", "./data")
@@ -203,7 +206,7 @@ if __name__ == "__main__":
         num_epochs=5,
         learning_rate=0.01,
         batch_size=32,
-        num_classes=53,
-        model_path="models/classifier_best.pth",
+        num_classes=6,
+        model_path="image_classification/models/model.pth",
         label_smoothing=0.1,
     )
