@@ -49,4 +49,4 @@ RUN --mount=type=cache,target=/home/appuser/.cache/uv,uid=${UID} \
 EXPOSE 8000
 
 # Run the application.
-CMD ["uv", "run", "gunicorn", "app:app", "--bind=0.0.0.0:8000"]
+CMD ["uv", "run", "gunicorn", "app:app", "--bind=0.0.0.0:8000" ,"-w 4 -"]
