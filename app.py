@@ -18,16 +18,16 @@ api = Api(app)
 
 init_db()
 
-api.add_resource(ImageResource, '/api/images/<int:image_id>')
+api.add_resource(ImageResource, '/api/image/<int:image_id>','/api/image')
 api.add_resource(ImageListResource, '/api/images')
 
-api.add_resource(DeviceResource, '/api/devices/<int:device_id>')
+api.add_resource(DeviceResource, '/api/device/<int:device_id>','/api/device')
 api.add_resource(DeviceListResource, '/api/devices')
 
-api.add_resource(PredictionResource, '/api/predictions/<int:prediction_id>')
+api.add_resource(PredictionResource, '/api/prediction/<int:prediction_id>','/api/prediction')
 api.add_resource(PredictionListResource, '/api/predictions')
 
-api.add_resource(FillLevelResource, '/api/fill_levels/<int:fill_level_id>')
+api.add_resource(FillLevelResource, '/api/fill_level/<int:fill_level_id>','/api/fill_level')
 api.add_resource(FillLevelListResource, '/api/fill_levels')
 
 @app.route('/')
@@ -44,19 +44,26 @@ def predict_image():
     if 'images' not in content:
         return make_response(jsonify({"message": "No images provided"}), 400)
     
-    for image in content['images']:
-        for cam, value in image.items():
-            img = Image.open(io.BytesIO(base64.decodebytes(bytes(value, "utf-8"))))
-            prediction = predict(img, "image_classification/model_weights.pth")
-            predictions.append({
-                "camera": cam,
-                "prediction": prediction
-            })
+    save_images = content["save_images"] if "save_images" in content else True
+    image_list = content['images']
+    for image in image_list:
+        decoded_image = Image.open(io.BytesIO(base64.decodebytes(bytes(image, "utf-8"))))
+        prediction = predict(decoded_image, "image_classification/models/model v3.pth")
+        predictions.append({
+            "image": image_list.index(image),
+            "prediction": prediction
+        })
+    if save_images:
+        save_image(zip(image_list, predictions))
     return make_response(jsonify(predictions), 200)
 
 @app.route('/api/images/save', methods=['POST'])
-def save_image():
-    pass
+def save_image(content = None):
+    if content is None:
+        content = request.get_json(silent=True)
+    if not content:
+        return make_response(jsonify({"message": "No input data provided"}), 400)
+    
 
 if __name__ == "__main__":
     app.run(debug=True)
