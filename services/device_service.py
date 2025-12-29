@@ -1,3 +1,4 @@
+import datetime
 from flask import request,jsonify,make_response
 from flask_restful import Resource
 
@@ -22,6 +23,7 @@ class DeviceResource(Resource):
 
     def put(self, device_id):
         device = db_session.query(DeviceModel).get(device_id)
+        device.last_update = datetime.now()
         if device is None:
             return make_response(jsonify({"message": "Device not found"}), 404)
         data = request.get_json(force=True)
