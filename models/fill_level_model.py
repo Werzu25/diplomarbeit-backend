@@ -1,9 +1,19 @@
+import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import DateTime, Numeric, CheckConstraint, ForeignKey
 from database.init import Base
+from dataclasses import dataclass
 
+@dataclass
 class FillLevelModel(Base):
     __tablename__ = "fill_levels"
+
+    id:int
+    device_id:int
+    last_update:datetime.datetime
+    fill_level_plastic:float
+    fill_level_paper:float
+    fill_level_glass:float
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -27,6 +37,3 @@ class FillLevelModel(Base):
         CheckConstraint("fill_level_glass >= 0 AND fill_level_glass <= 1"),
         nullable=False
     )
-
-    def __repr__(self) -> str:
-        return f"FillLevel(id={self.id}, device_id='{self.device_id}', last_update={self.last_update}, fill_level_plastic={self.fill_level_plastic}, fill_level_paper={self.fill_level_paper}, fill_level_glass={self.fill_level_glass})"
