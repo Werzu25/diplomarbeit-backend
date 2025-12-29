@@ -15,3 +15,9 @@ wheels/
 
 # dotenv environment variables file
 .env
+
+# Database files
+*.db
+
+# Image Classification Models
+*.pth
