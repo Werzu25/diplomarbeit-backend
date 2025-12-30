@@ -132,7 +132,6 @@ def train_model(
 
     scaler = torch.amp.GradScaler('cuda', enabled=AMP_ENABLED)
 
-    best_val_acc = -1.0
     history = {"train_loss": [], "val_loss": [], "val_acc": []}
 
     for epoch in range(1, num_epochs + 1):
@@ -170,17 +169,12 @@ def train_model(
         history["val_loss"].append(val_loss)
         history["val_acc"].append(val_acc)
 
-        # Save only best model
-        if val_acc > best_val_acc:
-            best_val_acc = val_acc
-            save_model(model, train_dataset.classes, model_path)
-
         print(
             f"Epoch {epoch}/{num_epochs} | "
             f"train_loss={train_loss:.4f} | val_loss={val_loss:.4f} | val_acc={val_acc:.2f}% | "
-            f"best={best_val_acc:.2f}%"
         )
-
+    
+    save_model(model, train_dataset.classes, model_path)
     return history
 
 
