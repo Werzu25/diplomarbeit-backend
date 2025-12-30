@@ -1,9 +1,8 @@
 import enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, Enum
-
 from database.init import Base
-
+from dataclasses import dataclass
 
 class LabelTypes(enum.Enum):
     GLASS = 1
@@ -11,8 +10,16 @@ class LabelTypes(enum.Enum):
     PLASTIC = 3
     METAL = 4
 
+@dataclass
 class PredictionModel(Base):
     __tablename__ = 'predictions'
+
+    id: int
+    image_id: int
+    device_id: int
+    prediction_label: LabelTypes
+    confidence: float
+    real_label: LabelTypes | None
     id: Mapped[int] = mapped_column(primary_key=True)
     
     image_id: Mapped[int] = mapped_column(ForeignKey("images.id"))
