@@ -21,3 +21,6 @@ wheels/
 
 # Image Classification Models
 *.pth
+
+# Images
+*.png
