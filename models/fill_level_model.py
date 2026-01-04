@@ -2,18 +2,10 @@ import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import DateTime, Numeric, CheckConstraint, ForeignKey
 from database.init import Base
-from dataclasses import dataclass
 
-@dataclass
+
 class FillLevelModel(Base):
     __tablename__ = "fill_levels"
-
-    id:int
-    device_id:int
-    last_update:datetime.datetime
-    fill_level_plastic:float
-    fill_level_paper:float
-    fill_level_glass:float
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
