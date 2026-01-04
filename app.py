@@ -68,7 +68,7 @@ with app.app_context():
 api.add_resource(ImageResource, "/api/image/<int:image_id>", "/api/image")
 api.add_resource(ImageListResource, "/api/images")
 
-api.add_resource(DeviceResource, "/api/device/<string:unique_device_id>", "/api/device")
+api.add_resource(DeviceResource, "/api/device/<int:device_id>", "/api/device")
 api.add_resource(DeviceListResource, "/api/devices")
 
 api.add_resource(PredictionResource, "/api/prediction/<int:prediction_id>", "/api/prediction")
@@ -175,6 +175,10 @@ def save_image():
 
 @app.teardown_request
 def shutdown_session(exception=None):
+    device = get_current_device()
+    device.device_up = False
+    device.last_update = datetime.now()
+    db_session.commit()
     db_session.close()
 
 
