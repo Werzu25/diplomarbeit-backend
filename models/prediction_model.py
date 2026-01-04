@@ -20,6 +20,7 @@ class PredictionModel(Base):
     prediction_label: LabelTypes
     confidence: float
     real_label: LabelTypes | None
+    
     id: Mapped[int] = mapped_column(primary_key=True)
     
     image_id: Mapped[int] = mapped_column(ForeignKey("images.id"))
