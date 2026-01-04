@@ -4,7 +4,7 @@ import os
 import uuid
 from datetime import datetime
 
-from flask import Flask, jsonify, make_response, request
+from flask import Flask, jsonify, make_response, request, send_file
 from flask_restful import Api
 from PIL import Image
 from sqlalchemy import select
@@ -63,7 +63,10 @@ def get_current_device():
 
 
 with app.app_context():
-    get_current_device()
+    device = get_current_device()
+    device.device_up = True
+    device.last_update = datetime.now()
+    db_session.commit()
 
 api.add_resource(ImageResource, "/api/image/<int:image_id>", "/api/image")
 api.add_resource(ImageListResource, "/api/images")
@@ -181,6 +184,12 @@ def shutdown_session(exception=None):
     db_session.commit()
     db_session.close()
 
+@app.route("/api/image/<path:image_path>", methods=["GET"])
+def get_image(image_path):
+    if os.path.exists(os.path.join(IMAGE_SAVE_PATH, image_path)):
+        image = Image.open(os.path.join(IMAGE_SAVE_PATH, image_path))
+        return send_file(os.path.join(IMAGE_SAVE_PATH, image_path), mimetype='image/png')
+    return make_response(jsonify({"message": "Image not found"}), 404)
 
 if __name__ == "__main__":
     app.run(debug=True)
