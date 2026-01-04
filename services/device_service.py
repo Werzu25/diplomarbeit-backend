@@ -6,8 +6,8 @@ from database.init import db_session
 from models.device_model import DeviceModel
 
 class DeviceResource(Resource):
-    def get(self, device_id):
-        device = db_session.query(DeviceModel).get(device_id)
+    def get(self, unique_device_id):
+        device = db_session.query(DeviceModel).filter_by(unique_device_id=unique_device_id).first()
         if device is None:
             return make_response(jsonify({"message": "Device not found"}), 404)
         return make_response(jsonify(device), 200)
@@ -21,8 +21,8 @@ class DeviceResource(Resource):
         db_session.commit()
         return make_response(jsonify({"message": "Device created successfully", "device_id": new_device.id}), 201)
 
-    def put(self, device_id):
-        device = db_session.query(DeviceModel).get(device_id)
+    def put(self, unique_device_id):
+        device = db_session.query(DeviceModel).filter_by(unique_device_id=unique_device_id).first()
         device.last_update = datetime.now()
         if device is None:
             return make_response(jsonify({"message": "Device not found"}), 404)
@@ -33,8 +33,8 @@ class DeviceResource(Resource):
             setattr(device, key, value)
         return make_response(jsonify({"message": "Device updated successfully"}), 200)
 
-    def delete(self, device_id):
-        device = db_session.query(DeviceModel).get(device_id)
+    def delete(self, unique_device_id):
+        device = db_session.query(DeviceModel).filter_by(unique_device_id=unique_device_id).first()
         if device is None:
             return make_response(jsonify({"message": "Device not found"}), 404)
         db_session.delete(device)
