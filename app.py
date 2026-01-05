@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime
 
 from flask import Flask, jsonify, make_response, request, send_file
+from flask_cors import CORS
 from flask_restful import Api
 from PIL import Image
 from sqlalchemy import select
@@ -20,6 +21,7 @@ from services.image_service import ImageListResource, ImageResource
 from services.prediction_service import PredictionListResource, PredictionResource
 
 app = Flask(__name__)
+CORS(app)
 api = Api(app)
 
 init_db()
