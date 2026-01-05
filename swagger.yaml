@@ -1,0 +1,711 @@
+openapi: 3.0.3
+info:
+  title: Image Classification API
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8000
+paths:
+  /:
+    get:
+      summary: Health check / welcome
+      responses:
+        "200":
+          description: Welcome text
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/images/predict:
+    post:
+      summary: Predict labels for provided images
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [images, device_name]
+              properties:
+                images:
+                  type: array
+                  description: Base64-encoded images
+                  items:
+                    type: string
+                    format: byte
+                device_name:
+                  type: string
+                save_images:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: Predictions per image (ordered by confidence)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PredictionResult'
+        "400":
+          description: Missing images or device name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/images/save:
+    post:
+      summary: Predict and persist images with predictions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [images, device_name]
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: byte
+                device_name:
+                  type: string
+                save_images:
+                  type: boolean
+                  description: Ignored (images are always saved here)
+      responses:
+        "201":
+          description: Images persisted with predictions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/resources/images/{image_path}:
+    get:
+      summary: Retrieve a saved image by path
+      parameters:
+        - in: path
+          name: image_path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: PNG image
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Image not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/device/regeister:
+    post:
+      summary: Register a device by name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [device_name]
+              properties:
+                device_name:
+                  type: string
+                location:
+                  type: string
+                  default: Unknown
+      responses:
+        "201":
+          description: Device registered (idempotent)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "400":
+          description: Missing device name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/update_device_status:
+    post:
+      summary: Update device online status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [device_name, device_up]
+              properties:
+                device_name:
+                  type: string
+                device_up:
+                  type: boolean
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "400":
+          description: Missing device name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/image/{image_id}:
+    get:
+      summary: Get image metadata by id
+      parameters:
+        - in: path
+          name: image_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Image record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Image'
+        "404":
+          description: Image not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+    put:
+      summary: Partially update image metadata
+      parameters:
+        - in: path
+          name: image_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Image'
+      responses:
+        "200":
+          description: Updated image
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Image'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: Image not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+    delete:
+      summary: Delete image
+      parameters:
+        - in: path
+          name: image_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: Image not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/image:
+    post:
+      summary: Create image (Marshmallow schema)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Image'
+      responses:
+        "201":
+          description: Created image
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Image'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/images:
+    get:
+      summary: List images
+      responses:
+        "200":
+          description: All images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Image'
+  /api/device/{device_id}:
+    get:
+      summary: Get device
+      parameters:
+        - in: path
+          name: device_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Device record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        "404":
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+    put:
+      summary: Update device (partial)
+      parameters:
+        - in: path
+          name: device_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+      responses:
+        "200":
+          description: Updated device
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+    delete:
+      summary: Delete device
+      parameters:
+        - in: path
+          name: device_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: Device not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/device:
+    post:
+      summary: Create device via schema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Device'
+      responses:
+        "201":
+          description: Created device
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/devices:
+    get:
+      summary: List devices
+      responses:
+        "200":
+          description: All devices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+  /api/prediction/{prediction_id}:
+    get:
+      summary: Get prediction
+      parameters:
+        - in: path
+          name: prediction_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Prediction record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prediction'
+        "404":
+          description: Prediction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+    put:
+      summary: Update prediction (partial)
+      parameters:
+        - in: path
+          name: prediction_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Prediction'
+      responses:
+        "200":
+          description: Updated prediction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prediction'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: Prediction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+    delete:
+      summary: Delete prediction
+      parameters:
+        - in: path
+          name: prediction_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: Prediction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/prediction:
+    post:
+      summary: Create prediction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Prediction'
+      responses:
+        "201":
+          description: Created prediction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prediction'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/predictions:
+    get:
+      summary: List predictions
+      responses:
+        "200":
+          description: All predictions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Prediction'
+  /api/fill_level/{fill_level_id}:
+    get:
+      summary: Get fill level
+      parameters:
+        - in: path
+          name: fill_level_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Fill level record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FillLevel'
+        "404":
+          description: Fill level not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+    put:
+      summary: Update fill level (partial)
+      parameters:
+        - in: path
+          name: fill_level_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FillLevel'
+      responses:
+        "200":
+          description: Updated fill level
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FillLevel'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: Fill level not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+    delete:
+      summary: Delete fill level
+      parameters:
+        - in: path
+          name: fill_level_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: Fill level not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/fill_level:
+    post:
+      summary: Create fill level
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FillLevel'
+      responses:
+        "201":
+          description: Created fill level
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FillLevel'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/fill_levels:
+    get:
+      summary: List fill levels
+      responses:
+        "200":
+          description: All fill levels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FillLevel'
+components:
+  schemas:
+    ApiMessage:
+      type: object
+      properties:
+        message:
+          type: string
+    PredictionResult:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Predicted label
+        confidence:
+          type: number
+          format: float
+          description: Confidence score for the label
+    Device:
+      type: object
+      properties:
+        id:
+          type: integer
+        device_name:
+          type: string
+        location:
+          type: string
+          nullable: true
+        device_up:
+          type: boolean
+        last_update:
+          type: string
+          format: date-time
+      required: [device_name]
+    Image:
+      type: object
+      properties:
+        id:
+          type: integer
+        path:
+          type: string
+        width:
+          type: integer
+        height:
+          type: integer
+        creation_date:
+          type: string
+          format: date-time
+      required: [path, width, height, creation_date]
+    Prediction:
+      type: object
+      properties:
+        id:
+          type: integer
+        image_id:
+          type: integer
+        device_id:
+          type: integer
+          nullable: true
+        prediction_label:
+          $ref: '#/components/schemas/PredictionLabel'
+        confidence:
+          type: number
+          format: float
+        real_label:
+          $ref: '#/components/schemas/PredictionLabel'
+      required: [image_id, prediction_label, confidence]
+    FillLevel:
+      type: object
+      properties:
+        id:
+          type: integer
+        device_id:
+          type: integer
+        last_update:
+          type: string
+          format: date-time
+        fill_level_plastic:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        fill_level_paper:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        fill_level_glass:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+      required: [device_id, last_update, fill_level_plastic, fill_level_paper, fill_level_glass]
+    PredictionLabel:
+      type: string
+      enum: [GLASS, PAPER, PLASTIC, METAL]
