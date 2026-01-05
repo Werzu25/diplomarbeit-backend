@@ -27,47 +27,6 @@ init_db()
 MODEL_PATH = os.getenv("MODEL_PATH", "image_classification/models/model.pth")
 IMAGE_SAVE_PATH = os.getenv("IMAGE_SAVE_PATH", "./images")
 
-
-def _resolve_device_identifiers():
-    """Return identifiers used to upsert the current device record."""
-    device_name = os.getenv("DEVICE_NAME", "device-unknown")
-    location = os.getenv("DEVICE_LOCATION", "unknown-location")
-    return device_name, location
-
-
-def get_current_device():
-    device_name, location = _resolve_device_identifiers()
-    device = db_session.execute(
-        select(DeviceModel).where(DeviceModel.device_name == device_name)
-    ).scalar_one_or_none()
-
-    now = datetime.now()
-
-    if device is None:
-        device = DeviceModel(
-            device_name=device_name,
-            location=location,
-            device_up=True,
-            last_update=now,
-        )
-        db_session.add(device)
-    else:
-        device.device_name = device_name
-        device.device_up = True
-        device.last_update = now
-        if location is not None:
-            device.location = location
-
-    db_session.commit()
-    return device
-
-
-with app.app_context():
-    device = get_current_device()
-    device.device_up = True
-    device.last_update = datetime.now()
-    db_session.commit()
-
 api.add_resource(ImageResource, "/api/image/<int:image_id>", "/api/image")
 api.add_resource(ImageListResource, "/api/images")
 
@@ -80,10 +39,6 @@ api.add_resource(PredictionListResource, "/api/predictions")
 api.add_resource(FillLevelResource, "/api/fill_level/<int:fill_level_id>", "/api/fill_level")
 api.add_resource(FillLevelListResource, "/api/fill_levels")
 
-@app.route("/")
-def home():
-    return "Welcome to the Image Classification API"
-
 
 def decode_image(image_data):
     image_bytes = base64.b64decode(image_data)
@@ -93,10 +48,15 @@ def decode_image(image_data):
 def get_image_predictions(decoded_image, model_path=MODEL_PATH):
     return predict(decoded_image, model_path)
 
+def get_device_by_name(device_name):
+    device = db_session.execute(
+        select(DeviceModel).where(DeviceModel.device_name == device_name)
+    ).scalar_one_or_none()
+    return device
 
-def save_predictions(image_prediction_pairs):
+def save_predictions(image_prediction_pairs, device_name):
     os.makedirs(IMAGE_SAVE_PATH, exist_ok=True)
-    device = get_current_device()
+    device = get_device_by_name(device_name)
     saved_images = 0
 
     for decoded_image, prediction in image_prediction_pairs:
@@ -146,6 +106,10 @@ def _parse_images_from_request():
         return None, make_response(jsonify({"message": "Images must be a non-empty list"}), 400)
     return images, content
 
+@app.route("/")
+def home():
+    return "Welcome to the Image Classification API"
+
 
 @app.route("/api/images/predict", methods=["POST"])
 def predict_image():
@@ -154,11 +118,14 @@ def predict_image():
         return payload_or_response  # already a response object
     content = payload_or_response
 
+    if content.get("device_name") is None:
+        return make_response(jsonify({"message": "Device name is required"}), 400)
+
     decoded_images = [decode_image(image) for image in images]
     predictions = [get_image_predictions(image) for image in decoded_images]
 
     if content.get("save_images", True):
-        save_predictions(zip(decoded_images, predictions))
+        save_predictions(zip(decoded_images, predictions), content.get("device_name"))
 
     return make_response(jsonify(predictions), 200)
 
@@ -168,28 +135,65 @@ def save_image():
     images, payload_or_response = _parse_images_from_request()
     if images is None:
         return payload_or_response
+    content = payload_or_response
 
     decoded_images = [decode_image(image) for image in images]
     predictions = [get_image_predictions(image) for image in decoded_images]
-    save_predictions(zip(decoded_images, predictions))
+    save_predictions(zip(decoded_images, predictions), content.get("device_name"))
 
     return make_response(jsonify({"message": "Images saved successfully"}), 201)
 
 
 @app.teardown_request
 def shutdown_session(exception=None):
-    device = get_current_device()
-    device.device_up = False
-    device.last_update = datetime.now()
-    db_session.commit()
     db_session.close()
 
-@app.route("/api/image/<path:image_path>", methods=["GET"])
+@app.route("/api/resources/images/<path:image_path>", methods=["GET"])
 def get_image(image_path):
     if os.path.exists(os.path.join(IMAGE_SAVE_PATH, image_path)):
         image = Image.open(os.path.join(IMAGE_SAVE_PATH, image_path))
         return send_file(os.path.join(IMAGE_SAVE_PATH, image_path), mimetype='image/png')
     return make_response(jsonify({"message": "Image not found"}), 404)
+
+@app.route("/api/device/regeister", methods=["POST"])
+def register_device():
+    content = request.get_json(silent=True) or {}
+    device_name = content.get("device_name")
+    device_location = content.get("location", "Unknown")
+    if device_name is None:
+        return make_response(jsonify({"message": "Device name is required"}), 400)
+
+    device = get_device_by_name(device_name)
+    if device is None:
+        device = DeviceModel(
+            device_name=device_name,
+            location="Unknown",
+            device_up=True,
+            last_update=datetime.now(),
+        )
+        db_session.add(device)
+        db_session.commit()
+
+    return make_response(jsonify({"message": "Device registered successfully"}), 201)
+
+@app.route("/api/update_device_status", methods=["POST"])
+def update_device_status():
+    content = request.get_json(silent=True) or {}
+    device_name = content.get("device_name")
+    device_up = content.get("device_up")
+
+    if device_name is None:
+        return make_response(jsonify({"message": "Device name is required"}), 400)
+
+    device = get_device_by_name(device_name)
+    if device is None:
+        return make_response(jsonify({"message": "Device not found"}), 404)
+
+    device.device_up = device_up
+    device.last_update = datetime.now()
+    db_session.commit()
+
+    return make_response(jsonify({"message": "Device status updated successfully"}), 200)
 
 if __name__ == "__main__":
     app.run(debug=True)
