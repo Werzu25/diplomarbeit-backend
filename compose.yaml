@@ -14,7 +14,16 @@ services:
     build:
       context: .
     ports:
-      - 8000:8000
+      - "8000:8000"
+  swagger:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "8001:8080"
+    volumes:
+      - ./swagger.yaml:/tmp/swagger.yaml:ro
+    environment:
+      SWAGGER_JSON: /tmp/swagger.yaml
+
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to
@@ -48,4 +57,3 @@ services:
 # secrets:
 #   db-password:
 #     file: db/password.txt
-
