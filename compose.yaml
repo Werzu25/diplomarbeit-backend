@@ -20,9 +20,9 @@ services:
     ports:
       - "8001:8080"
     volumes:
-      - ./swagger.yaml:/usr/share/nginx/html/swagger.yaml:ro
+      - ./swagger.yaml:/tmp/swagger.yaml:ro
     environment:
-      SWAGGER_JSON: /swagger.yaml
+      SWAGGER_JSON: /tmp/swagger.yaml
 
 
 # The commented out section below is an example of how to define a PostgreSQL

@@ -16,7 +16,7 @@ class DeviceResource(Resource):
         if device is None:
             return make_response(jsonify({"message": "Device not found"}), 404)
         return make_response(jsonify(device_schema.dump(device)), 200)
-    
+    """
     def post(self):
         data = request.get_json(force=True)
         if not data:
@@ -30,7 +30,7 @@ class DeviceResource(Resource):
         db_session.add(new_device)
         db_session.commit()
         return make_response(jsonify(device_schema.dump(new_device)), 201)
-
+    """
     def put(self, device_id):
         device = db_session.query(DeviceModel).get(device_id)
         if device is None:
