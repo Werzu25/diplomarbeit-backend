@@ -17,6 +17,8 @@ tags:
     description: CRUD operations for prediction records
   - name: Fill Levels
     description: Capture container fill level readings
+  - name: Users
+    description: Manage user accounts
 paths:
   /:
     get:
@@ -603,6 +605,121 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/FillLevel'
+  /api/user/{user_id}:
+    get:
+      tags: [Users]
+      summary: Get user
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+    put:
+      tags: [Users]
+      summary: Update user (partial)
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+    delete:
+      tags: [Users]
+      summary: Delete user
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/user:
+    post:
+      tags: [Users]
+      summary: Create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/users:
+    get:
+      tags: [Users]
+      summary: List users
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
 components:
   schemas:
     ApiMessage:
@@ -793,3 +910,69 @@ components:
     PredictionLabel:
       type: string
       enum: [GLASS, PAPER, PLASTIC, METAL]
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_name:
+          type: string
+        email:
+          type: string
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+        creation_date:
+          type: string
+          format: date-time
+          nullable: true
+      required: [user_name, email]
+    UserCreate:
+      type: object
+      required: [user_name, email]
+      properties:
+        user_name:
+          type: string
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+        creation_date:
+          type: string
+          format: date-time
+          nullable: true
+    UserUpdate:
+      type: object
+      properties:
+        user_name:
+          type: string
+        email:
+          type: string
+          format: email
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        password:
+          type: string
+          nullable: true
+        creation_date:
+          type: string
+          format: date-time
+          nullable: true

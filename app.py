@@ -19,12 +19,15 @@ from services.device_service import DeviceListResource, DeviceResource
 from services.fill_level_service import FillLevelListResource, FillLevelResource
 from services.image_service import ImageListResource, ImageResource
 from services.prediction_service import PredictionListResource, PredictionResource
+from services.user_service import UserListResource, UserResource
+from schemas.device_schema import DeviceSchema
 
 app = Flask(__name__)
 CORS(app)
 api = Api(app)
 
 init_db()
+device_schema = DeviceSchema()
 
 MODEL_PATH = os.getenv("MODEL_PATH", "image_classification/models/model.pth")
 IMAGE_SAVE_PATH = os.getenv("IMAGE_SAVE_PATH", "./images")
@@ -40,6 +43,9 @@ api.add_resource(PredictionListResource, "/api/predictions")
 
 api.add_resource(FillLevelResource, "/api/fill_level/<int:fill_level_id>", "/api/fill_level")
 api.add_resource(FillLevelListResource, "/api/fill_levels")
+
+api.add_resource(UserResource, "/api/user/<int:user_id>", "/api/user")
+api.add_resource(UserListResource, "/api/users")
 
 
 def decode_image(image_data):
@@ -176,7 +182,7 @@ def register_device():
         db_session.add(device)
         db_session.commit()
 
-    return make_response(jsonify({"message": "Device registered successfully"}), 201)
+    return make_response(jsonify(device_schema.dump(device)), 201)
 
 @app.route("/api/update_device_status", methods=["POST"])
 def update_device_status():
