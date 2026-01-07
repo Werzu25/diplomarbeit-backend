@@ -169,7 +169,7 @@ def register_device():
     if device is None:
         device = DeviceModel(
             device_name=device_name,
-            location="Unknown",
+            location=device_location,
             device_up=True,
             last_update=datetime.now(),
         )
