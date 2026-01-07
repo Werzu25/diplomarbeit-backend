@@ -4,9 +4,23 @@ info:
   version: "1.0.0"
 servers:
   - url: http://localhost:8000
+tags:
+  - name: Health
+    description: Service readiness and welcome endpoints
+  - name: Classification
+    description: Run image classification and return predictions
+  - name: Images
+    description: Manage image metadata and stored image assets
+  - name: Devices
+    description: Register and maintain device status and details
+  - name: Predictions
+    description: CRUD operations for prediction records
+  - name: Fill Levels
+    description: Capture container fill level readings
 paths:
   /:
     get:
+      tags: [Health]
       summary: Health check / welcome
       responses:
         "200":
@@ -17,6 +31,7 @@ paths:
                 type: string
   /api/images/predict:
     post:
+      tags: [Classification]
       summary: Predict labels for provided images
       requestBody:
         required: true
@@ -52,6 +67,7 @@ paths:
                 $ref: '#/components/schemas/ApiMessage'
   /api/images/save:
     post:
+      tags: [Images]
       summary: Predict and persist images with predictions
       requestBody:
         required: true
@@ -86,6 +102,7 @@ paths:
                 $ref: '#/components/schemas/ApiMessage'
   /api/resources/images/{image_path}:
     get:
+      tags: [Images]
       summary: Retrieve a saved image by path
       parameters:
         - in: path
@@ -109,6 +126,7 @@ paths:
                 $ref: '#/components/schemas/ApiMessage'
   /api/device/regeister:
     post:
+      tags: [Devices]
       summary: Register a device by name
       requestBody:
         required: true
@@ -138,6 +156,7 @@ paths:
                 $ref: '#/components/schemas/ApiMessage'
   /api/update_device_status:
     post:
+      tags: [Devices]
       summary: Update device online status
       requestBody:
         required: true
@@ -172,6 +191,7 @@ paths:
                 $ref: '#/components/schemas/ApiMessage'
   /api/image/{image_id}:
     get:
+      tags: [Images]
       summary: Get image metadata by id
       parameters:
         - in: path
@@ -193,6 +213,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
     put:
+      tags: [Images]
       summary: Partially update image metadata
       parameters:
         - in: path
@@ -226,6 +247,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
     delete:
+      tags: [Images]
       summary: Delete image
       parameters:
         - in: path
@@ -248,6 +270,7 @@ paths:
                 $ref: '#/components/schemas/ApiMessage'
   /api/images:
     get:
+      tags: [Images]
       summary: List images
       responses:
         "200":
@@ -260,6 +283,7 @@ paths:
                   $ref: '#/components/schemas/Image'
   /api/device/{device_id}:
     get:
+      tags: [Devices]
       summary: Get device
       parameters:
         - in: path
@@ -281,6 +305,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
     put:
+      tags: [Devices]
       summary: Update device (partial)
       parameters:
         - in: path
@@ -314,6 +339,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
     delete:
+      tags: [Devices]
       summary: Delete device
       parameters:
         - in: path
@@ -336,6 +362,7 @@ paths:
                 $ref: '#/components/schemas/ApiMessage'
   /api/devices:
     get:
+      tags: [Devices]
       summary: List devices
       responses:
         "200":
@@ -348,6 +375,7 @@ paths:
                   $ref: '#/components/schemas/Device'
   /api/prediction/{prediction_id}:
     get:
+      tags: [Predictions]
       summary: Get prediction
       parameters:
         - in: path
@@ -369,6 +397,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
     put:
+      tags: [Predictions]
       summary: Update prediction (partial)
       parameters:
         - in: path
@@ -402,6 +431,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
     delete:
+      tags: [Predictions]
       summary: Delete prediction
       parameters:
         - in: path
@@ -424,6 +454,7 @@ paths:
                 $ref: '#/components/schemas/ApiMessage'
   /api/prediction:
     post:
+      tags: [Predictions]
       summary: Create prediction
       requestBody:
         required: true
@@ -446,6 +477,7 @@ paths:
                 $ref: '#/components/schemas/ApiMessage'
   /api/predictions:
     get:
+      tags: [Predictions]
       summary: List predictions
       responses:
         "200":
@@ -458,6 +490,7 @@ paths:
                   $ref: '#/components/schemas/Prediction'
   /api/fill_level/{fill_level_id}:
     get:
+      tags: ["Fill Levels"]
       summary: Get fill level
       parameters:
         - in: path
@@ -479,6 +512,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
     put:
+      tags: ["Fill Levels"]
       summary: Update fill level (partial)
       parameters:
         - in: path
@@ -512,6 +546,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
     delete:
+      tags: ["Fill Levels"]
       summary: Delete fill level
       parameters:
         - in: path
@@ -534,6 +569,7 @@ paths:
                 $ref: '#/components/schemas/ApiMessage'
   /api/fill_level:
     post:
+      tags: ["Fill Levels"]
       summary: Create fill level
       requestBody:
         required: true
@@ -556,6 +592,7 @@ paths:
                 $ref: '#/components/schemas/ApiMessage'
   /api/fill_levels:
     get:
+      tags: ["Fill Levels"]
       summary: List fill levels
       responses:
         "200":
