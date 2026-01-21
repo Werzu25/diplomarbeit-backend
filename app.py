@@ -2,11 +2,13 @@ import base64
 import io
 import os
 import uuid
+import hashlib
 from datetime import datetime
 
 from flask import Flask, jsonify, make_response, request, send_file
 from flask_cors import CORS
 from flask_restful import Api
+from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
 from PIL import Image
 from sqlalchemy import select
 
@@ -15,6 +17,8 @@ from image_classification.modelTools import predict
 from models.device_model import DeviceModel
 from models.image_model import ImageModel
 from models.prediction_model import LabelTypes, PredictionModel
+from models.user_model import UserModel
+from schemas import user_schema
 from services.device_service import DeviceListResource, DeviceResource
 from services.fill_level_service import FillLevelListResource, FillLevelResource
 from services.image_service import ImageListResource, ImageResource
@@ -23,8 +27,11 @@ from services.user_service import UserListResource, UserResource
 from schemas.device_schema import DeviceSchema
 
 app = Flask(__name__)
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "change-me")
+
 CORS(app)
 api = Api(app)
+jwt = JWTManager(app)
 
 init_db()
 device_schema = DeviceSchema()
@@ -46,7 +53,6 @@ api.add_resource(FillLevelListResource, "/api/fill_levels")
 
 api.add_resource(UserResource, "/api/user/<int:user_id>", "/api/user")
 api.add_resource(UserListResource, "/api/users")
-
 
 def decode_image(image_data):
     image_bytes = base64.b64decode(image_data)
@@ -202,6 +208,34 @@ def update_device_status():
     db_session.commit()
 
     return make_response(jsonify({"message": "Device status updated successfully"}), 200)
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    content = request.get_json(silent=True) or {}
+    username = content.get("username")
+    password = content.get("password")
+
+    if username is None or password is None:
+        return make_response(jsonify({"message": "Username and password are required"}), 400)
+
+    user = db_session.execute(
+        select(UserModel).where(UserModel.user_name == username)
+    ).scalar_one_or_none()
+    if user is None:
+        return make_response(jsonify({"message": "User not found"}), 404)
+
+    hashed_password = hashlib.sha256(password.encode()).hexdigest()
+    if user.password != hashed_password:
+        return make_response(jsonify({"message": "Invalid credentials"}), 401)
+
+    token = create_access_token(identity=str(user.id), additional_claims={"user_name": user.user_name})
+    return make_response(jsonify({"message": "Login successful", "token": token}), 200)
+
+@app.route("/api/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    _ = get_jwt()
+    return make_response(jsonify({"message": "Logout successful"}), 200)
 
 if __name__ == "__main__":
     app.run(debug=True)

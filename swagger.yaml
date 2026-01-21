@@ -720,6 +720,64 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/User'
+  /api/login:
+    post:
+      tags: [Users]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "400":
+          description: Missing credentials or already logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+  /api/logout:
+    post:
+      tags: [Users]
+      summary: Logout user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
+        "400":
+          description: Missing username or user not logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
 components:
   schemas:
     ApiMessage:
@@ -927,7 +985,6 @@ components:
           nullable: true
         password:
           type: string
-          nullable: true
         creation_date:
           type: string
           format: date-time
@@ -935,7 +992,7 @@ components:
       required: [user_name, email]
     UserCreate:
       type: object
-      required: [user_name, email]
+      required: [user_name, email, password]
       properties:
         user_name:
           type: string
@@ -976,3 +1033,17 @@ components:
           type: string
           format: date-time
           nullable: true
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    LogoutRequest:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
