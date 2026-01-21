@@ -14,3 +14,4 @@ class UserModel(Base):
     last_name:Mapped[str] = mapped_column(nullable=True)
     password:Mapped[str] = mapped_column(nullable=True)
     creation_date:Mapped[DateTime] = mapped_column(DateTime,nullable=True)
+    admin:Mapped[bool] = mapped_column(nullable=True, default=False)
