@@ -700,7 +700,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/RegisterResponse'
         "400":
           description: Validation error
           content:
@@ -736,7 +736,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiMessage'
+                $ref: '#/components/schemas/AuthResponse'
         "400":
           description: Missing credentials or already logged in
           content:
@@ -759,12 +759,8 @@ paths:
     post:
       tags: [Users]
       summary: Logout user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LogoutRequest'
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: Logout successful
@@ -773,12 +769,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
         "400":
-          description: Missing username or user not logged in
+          description: Missing or invalid token
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
   schemas:
     ApiMessage:
       type: object
@@ -1041,9 +1042,17 @@ components:
           type: string
         password:
           type: string
-    LogoutRequest:
+    AuthResponse:
       type: object
-      required: [username]
       properties:
-        username:
+        message:
+          type: string
+        token:
+          type: string
+    RegisterResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        token:
           type: string
