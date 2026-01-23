@@ -27,7 +27,7 @@ from services.user_service import UserListResource, UserResource
 from schemas.device_schema import DeviceSchema
 
 app = Flask(__name__)
-app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "change-me")
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "jwt-secret-key")
 
 CORS(app)
 api = Api(app)
@@ -237,5 +237,8 @@ def logout():
     _ = get_jwt()
     return make_response(jsonify({"message": "Logout successful"}), 200)
 
-if __name__ == "__main__":
+def main():
     app.run(debug=True)
+
+if __name__ == "__main__":
+    main()
