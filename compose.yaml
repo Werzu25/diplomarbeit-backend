@@ -14,7 +14,7 @@ services:
     build:
       context: .
     ports:
-      - "8000:8000"
+      - "80:80"
   swagger:
     image: swaggerapi/swagger-ui
     ports:
