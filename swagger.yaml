@@ -3,7 +3,10 @@ info:
   title: Image Classification API
   version: "1.0.0"
 servers:
-  - url: http://localhost:8000
+  - description: Local server
+    url: http://localhost:80
+  - description: Remote Azure server
+    url: https://smart-trash.azurewebsites.net/
 tags:
   - name: Health
     description: Service readiness and welcome endpoints
