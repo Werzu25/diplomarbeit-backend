@@ -104,7 +104,7 @@ def save_predictions(image_prediction_pairs, device_name):
             creation_date=datetime.now(),
         )
         db_session.add(new_image)
-        db_session.flush()  # ensure we can reference new_image.id
+        db_session.flush()
 
         new_prediction = PredictionModel(
             image_id=new_image.id,
@@ -178,7 +178,7 @@ def save_image():
 
 @app.teardown_request
 def shutdown_session(exception=None):
-    db_session.remove()
+    db_session.close()
 
 @app.route("/api/resources/images/<path:image_path>", methods=["GET"])
 def get_image(image_path):
