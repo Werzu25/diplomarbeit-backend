@@ -3,7 +3,7 @@ from flask import request, jsonify, make_response
 from flask_restful import Resource
 from marshmallow import ValidationError
 
-from database.init import db_session
+from db.init import db_session
 from models.device_model import DeviceModel
 from schemas import DeviceSchema
 

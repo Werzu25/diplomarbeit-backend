@@ -1,7 +1,7 @@
 import enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey, Enum
-from database.init import Base
+from db.init import Base
 
 class LabelTypes(enum.Enum):
     GLASS = 1

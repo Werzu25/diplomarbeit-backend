@@ -1,6 +1,6 @@
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
-from database.init import db_session
+from db.init import db_session
 from models.device_model import DeviceModel
 # Import related models so SQLAlchemy can configure relationships
 from models.fill_level_model import FillLevelModel  # noqa: F401

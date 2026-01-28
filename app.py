@@ -12,7 +12,7 @@ from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_req
 from PIL import Image
 from sqlalchemy import select
 
-from database.init import db_session, init_db
+from db.init import db_session, init_db
 from image_classification.modelTools import predict
 from models.device_model import DeviceModel
 from models.image_model import ImageModel

@@ -1,7 +1,7 @@
 import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import DateTime, Numeric, CheckConstraint, ForeignKey
-from database.init import Base
+from db.init import Base
 
 
 class FillLevelModel(Base):

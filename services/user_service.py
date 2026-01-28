@@ -4,7 +4,7 @@ from flask import request, jsonify, make_response
 from flask_restful import Resource
 from marshmallow import ValidationError
 
-from database.init import db_session
+from db.init import db_session
 from models.user_model import UserModel
 from schemas import UserSchema
 from flask_jwt_extended import create_access_token
