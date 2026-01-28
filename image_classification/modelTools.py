@@ -102,7 +102,7 @@ def train_model(
     num_epochs=10,
     learning_rate=1e-3,
     batch_size=64,
-    num_classes=53,
+    num_classes=4,
     model_path="models/classifier_best.pth",
     label_smoothing=0.0,
 ):
@@ -202,7 +202,7 @@ if __name__ == "__main__":
         num_epochs=5,
         learning_rate=0.01,
         batch_size=32,
-        num_classes=6,
+        num_classes=4,
         model_path="image_classification/models/model.pth",
         label_smoothing=0.1,
     )
