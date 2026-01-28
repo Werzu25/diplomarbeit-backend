@@ -34,5 +34,13 @@
 LICENSE
 README.md
 
-*.png
+# Python-generated files 
 *.bak
+
+# Images
+*.png
+*.jpg
+*.jpeg
+
+**/data/train**
+**/data/valid**

@@ -12,7 +12,7 @@ from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_req
 from PIL import Image
 from sqlalchemy import select
 
-from database.init import db_session, init_db
+from db.init import db_session, init_db
 from image_classification.modelTools import predict
 from models.device_model import DeviceModel
 from models.image_model import ImageModel
@@ -55,12 +55,18 @@ api.add_resource(UserResource, "/api/user/<int:user_id>", "/api/user")
 api.add_resource(UserListResource, "/api/users")
 
 def decode_image(image_data):
-    image_bytes = base64.b64decode(image_data)
-    return Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    try:
+        image_bytes = base64.b64decode(image_data)
+        return Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception as e:
+        raise ValueError(f"Invalid image data: {e}")
 
 
 def get_image_predictions(decoded_image, model_path=MODEL_PATH):
-    return predict(decoded_image, model_path)
+    try:
+        return predict(decoded_image, model_path)
+    except Exception as e:
+        raise ValueError(f"Prediction failed: {e}")
 
 def get_device_by_name(device_name):
     device = db_session.execute(
@@ -71,6 +77,9 @@ def get_device_by_name(device_name):
 def save_predictions(image_prediction_pairs, device_name):
     os.makedirs(IMAGE_SAVE_PATH, exist_ok=True)
     device = get_device_by_name(device_name)
+    if device is None:
+        raise ValueError(f"Device '{device_name}' not found")
+    
     saved_images = 0
 
     for decoded_image, prediction in image_prediction_pairs:
@@ -95,11 +104,11 @@ def save_predictions(image_prediction_pairs, device_name):
             creation_date=datetime.now(),
         )
         db_session.add(new_image)
-        db_session.flush()  # ensure we can reference new_image.id
+        db_session.flush()
 
         new_prediction = PredictionModel(
             image_id=new_image.id,
-            device_id=device.id if device else None,
+            device_id=device.id,
             prediction_label=label_enum,
             confidence=confidence,
             real_label=None,
@@ -134,13 +143,19 @@ def predict_image():
 
     if content.get("device_name") is None:
         return make_response(jsonify({"message": "Device name is required"}), 400)
+    try:
+        decoded_images = [decode_image(image) for image in images]
+        predictions = [get_image_predictions(image) for image in decoded_images]
 
-    decoded_images = [decode_image(image) for image in images]
-    predictions = [get_image_predictions(image) for image in decoded_images]
-
-    if content.get("save_images", True):
-        save_predictions(zip(decoded_images, predictions), content.get("device_name"))
-
+        if content.get("save_images", True):
+            save_predictions(zip(decoded_images, predictions), content.get("device_name"))
+            
+    except ValueError as e:
+        return make_response(jsonify({"message": f"{e}"}), 400)
+    
+    except Exception as e:
+        return make_response(jsonify({"message": f"An unexpected error occurred: {e}"}), 500)
+    
     return make_response(jsonify(predictions), 200)
 
 
@@ -151,9 +166,12 @@ def save_image():
         return payload_or_response
     content = payload_or_response
 
-    decoded_images = [decode_image(image) for image in images]
-    predictions = [get_image_predictions(image) for image in decoded_images]
-    save_predictions(zip(decoded_images, predictions), content.get("device_name"))
+    try:
+        decoded_images = [decode_image(image) for image in images]
+        predictions = [get_image_predictions(image) for image in decoded_images]
+        save_predictions(zip(decoded_images, predictions), content.get("device_name"))
+    except ValueError as e:
+        return make_response(jsonify({"message": f"{e}"}), 400)
 
     return make_response(jsonify({"message": "Images saved successfully"}), 201)
 

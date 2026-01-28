@@ -1,6 +1,6 @@
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
-from database.init import db_session
+from db.init import db_session
 from models.image_model import ImageModel
 # Import related model for relationship registration
 from models.prediction_model import PredictionModel  # noqa: F401

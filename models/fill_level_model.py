@@ -1,7 +1,7 @@
 import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import DateTime, Numeric, CheckConstraint, ForeignKey
-from database.init import Base
+from db.init import Base
 
 
 class FillLevelModel(Base):
@@ -24,8 +24,8 @@ class FillLevelModel(Base):
         CheckConstraint("fill_level_paper >= 0 AND fill_level_paper <= 1"),
         nullable=False
     )
-    fill_level_glass: Mapped[float] = mapped_column(
+    fill_level_waste: Mapped[float] = mapped_column(
         Numeric(3, 2),
-        CheckConstraint("fill_level_glass >= 0 AND fill_level_glass <= 1"),
+        CheckConstraint("fill_level_waste >= 0 AND fill_level_waste <= 1"),
         nullable=False
     )

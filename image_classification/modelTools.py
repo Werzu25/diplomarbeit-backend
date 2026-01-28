@@ -1,4 +1,3 @@
-
 import os
 import torch
 import tqdm
@@ -88,20 +87,22 @@ def save_model(model, class_names, path):
 
 
 def load_model(path):
-    checkpoint = torch.load(path, map_location=device)
-    class_names = checkpoint["class_names"]
-    model = ImageClassifierModel(num_classes=len(class_names))
-    model.load_state_dict(checkpoint["model_state"])
-    model.to(device).eval()
-    return model, class_names
-
+    try:
+        checkpoint = torch.load(path, map_location=device)
+        class_names = checkpoint["class_names"]
+        model = ImageClassifierModel(num_classes=len(class_names))
+        model.load_state_dict(checkpoint["model_state"])
+        model.to(device).eval()
+        return model, class_names
+    except Exception as e:
+        raise RuntimeError(f"Failed to load model from {path}: {e}")
 
 def train_model(
     datafolder,
     num_epochs=10,
     learning_rate=1e-3,
     batch_size=64,
-    num_classes=53,
+    num_classes=4,
     model_path="models/classifier_best.pth",
     label_smoothing=0.0,
 ):
@@ -179,15 +180,16 @@ def train_model(
 
 
 def predict(input_image, model_weights_path, topk=4):
-    model, class_names = load_model(model_weights_path)
-
-    with torch.no_grad():
-        x = transforms(input_image).unsqueeze(0).to(device)
-        logits = model(x)
-        probs = torch.softmax(logits, dim=1).squeeze(0)
-        top_probs, top_idxs = torch.topk(probs, k=topk)
-
-    return [(class_names[i], float(p)) for i, p in zip(top_idxs.tolist(), top_probs.tolist())]
+    try:
+        model, class_names = load_model(model_weights_path)
+        with torch.no_grad():
+            x = transforms(input_image).unsqueeze(0).to(device)
+            logits = model(x)
+            probs = torch.softmax(logits, dim=1).squeeze(0)
+            top_probs, top_idxs = torch.topk(probs, k=topk)
+        return [(class_names[i], float(p)) for i, p in zip(top_idxs.tolist(), top_probs.tolist())]
+    except RuntimeError as e:
+        raise RuntimeError(e)
 
 if __name__ == "__main__":
     from ImageClassifierDataset import ImageClassifierDataset
@@ -200,7 +202,7 @@ if __name__ == "__main__":
         num_epochs=5,
         learning_rate=0.01,
         batch_size=32,
-        num_classes=6,
+        num_classes=4,
         model_path="image_classification/models/model.pth",
         label_smoothing=0.1,
     )
