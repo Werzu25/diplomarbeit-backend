@@ -24,6 +24,10 @@ wheels/
 
 # Images
 *.png
-
+*.jpg
+*.jpeg
 # Backup files
 *.bak
+
+**/data/train**
+**/data/valid**
