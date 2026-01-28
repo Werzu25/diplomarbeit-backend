@@ -82,7 +82,7 @@ paths:
           application/json:
             schema:
               type: object
-              required: [images]
+              required: [images, device_name]
               properties:
                 images:
                   type: array
@@ -154,7 +154,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiMessage'
+                $ref: '#/components/schemas/Device'
         "400":
           description: Missing device name
           content:
@@ -942,12 +942,12 @@ components:
           format: float
           minimum: 0
           maximum: 1
-        fill_level_glass:
+        fill_level_waste:
           type: number
           format: float
           minimum: 0
           maximum: 1
-      required: [device_id, last_update, fill_level_plastic, fill_level_paper, fill_level_glass]
+      required: [device_id, last_update, fill_level_plastic, fill_level_paper, fill_level_waste]
     FillLevelUpdate:
       type: object
       properties:
@@ -966,7 +966,7 @@ components:
           format: float
           minimum: 0
           maximum: 1
-        fill_level_glass:
+        fill_level_waste:
           type: number
           format: float
           minimum: 0
@@ -995,6 +995,10 @@ components:
           type: string
           format: date-time
           nullable: true
+        admin:
+          type: boolean
+          nullable: true
+          default: false
       required: [user_name, email]
     UserCreate:
       type: object
@@ -1018,6 +1022,10 @@ components:
           type: string
           format: date-time
           nullable: true
+        admin:
+          type: boolean
+          nullable: true
+          default: false
     UserUpdate:
       type: object
       properties:
@@ -1039,6 +1047,10 @@ components:
           type: string
           format: date-time
           nullable: true
+        admin:
+          type: boolean
+          nullable: true
+          default: false
     LoginRequest:
       type: object
       required: [username, password]
