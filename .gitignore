@@ -27,3 +27,6 @@ wheels/
 
 # Backup files
 *.bak
+
+**/data/train/**
+**/data/valid/**
