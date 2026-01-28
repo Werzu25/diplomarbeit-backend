@@ -3,6 +3,8 @@ info:
   title: Image Classification API
   version: "1.0.0"
 servers:
+  - description: Development server
+    url: http://172.20.10.2 
   - description: Local server
     url: http://localhost:80
   - description: Remote Azure server
