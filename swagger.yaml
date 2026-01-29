@@ -973,7 +973,7 @@ components:
           maximum: 1
     PredictionLabel:
       type: string
-      enum: [GLASS, PAPER, PLASTIC, METAL]
+      enum: [WASTE, PAPER, PLASTIC, METAL]
     User:
       type: object
       properties:
