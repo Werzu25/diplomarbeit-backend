@@ -23,8 +23,10 @@ class FillLevelResource(Resource):
 
         try:
             new_fill_level = fill_level_schema.load(data)
-        except ValidationError as err:
-            return make_response(jsonify({"errors": err.messages}), 400)
+        except ValidationError as e:
+            return make_response(jsonify({"message": str(e)}), 400)
+        except Exception as e:
+            return make_response(jsonify({"message": str(e)}), 500)
 
         db_session.add(new_fill_level)
         db_session.commit()
@@ -40,8 +42,8 @@ class FillLevelResource(Resource):
 
         try:
             fill_level_schema.load(data, instance=fill_level, partial=True)
-        except ValidationError as err:
-            return make_response(jsonify({"errors": err.messages}), 400)
+        except ValidationError as e:
+            return make_response(jsonify({"message": str(e)}), 400)
 
         db_session.commit()
         return make_response(jsonify(fill_level_schema.dump(fill_level)), 200)
