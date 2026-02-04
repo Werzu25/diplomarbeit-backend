@@ -195,13 +195,14 @@ if __name__ == "__main__":
     from ImageClassifierDataset import ImageClassifierDataset
     from ImageClassifierModel import ImageClassifierModel
     # Example usage: train the model
+    num_epochs = 7
     load_dotenv()
     data_folder = os.getenv("DATA_FOLDER", "./data")
     train_model(
         datafolder=data_folder,
-        num_epochs=5,
+        num_epochs=num_epochs,
         learning_rate=0.01,
-        batch_size=32,
+        batch_size=16,
         num_classes=4,
         model_path="image_classification/models/model.pth",
         label_smoothing=0.1,
