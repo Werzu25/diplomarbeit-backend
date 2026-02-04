@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey, Enum
 from db.init import Base
 
 class LabelTypes(enum.Enum):
-    GLASS = 1
+    WASTE = 1
     PAPER = 2
     PLASTIC = 3
     METAL = 4
