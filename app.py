@@ -5,7 +5,7 @@ import uuid
 import hashlib
 from datetime import datetime
 
-from flask import Flask, jsonify, make_response, request, send_file
+from flask import Flask, jsonify, make_response, request, send_file, url_for
 from flask_cors import CORS
 from flask_restful import Api
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
@@ -254,6 +254,12 @@ def login():
 def logout():
     _ = get_jwt()
     return make_response(jsonify({"message": "Logout successful"}), 200)
+
+app.add_url_rule(
+    "/favicon.ico",
+    endpoint="favicon",
+    redirect_to=url_for("static", filename="assets/favicon.ico"),
+)
 
 def main():
     app.run(debug=True)
