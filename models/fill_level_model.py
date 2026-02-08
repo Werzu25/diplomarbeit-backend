@@ -12,7 +12,7 @@ class FillLevelModel(Base):
     device_id: Mapped[int] = mapped_column(ForeignKey("devices.id"))
     device: Mapped["DeviceModel"] = relationship(back_populates="fill_level")
 
-    last_update: Mapped[DateTime] = mapped_column(DateTime)
+    last_update: Mapped[DateTime] = mapped_column(DateTime, default=datetime.datetime.now(), nullable=False)
 
     fill_level_plastic: Mapped[float] = mapped_column(
         Numeric(3, 2),

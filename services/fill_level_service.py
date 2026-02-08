@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import request, jsonify, make_response
 from flask_restful import Resource
 from marshmallow import ValidationError
@@ -27,6 +28,7 @@ class FillLevelResource(Resource):
             return make_response(jsonify({"message": str(e)}), 400)
         except Exception as e:
             return make_response(jsonify({"message": str(e)}), 500)
+        new_fill_level.last_update = datetime.now()
 
         db_session.add(new_fill_level)
         db_session.commit()
@@ -45,6 +47,7 @@ class FillLevelResource(Resource):
         except ValidationError as e:
             return make_response(jsonify({"message": str(e)}), 400)
 
+        fill_level.last_update = datetime.now()
         db_session.commit()
         return make_response(jsonify(fill_level_schema.dump(fill_level)), 200)
 
