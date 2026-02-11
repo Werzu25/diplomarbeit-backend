@@ -58,3 +58,28 @@ class PredictionListResource(Resource):
     def get(self):
         predictions = db_session.query(PredictionModel).all()
         return make_response(jsonify(prediction_list_schema.dump(predictions)), 200)
+
+
+class PredictionByDeviceListResource(Resource):
+    def get(self, device_id):
+        predictions = (
+            db_session.query(PredictionModel)
+            .filter(PredictionModel.device_id == device_id)
+            .order_by(PredictionModel.id.desc())
+            .all()
+        )
+        return make_response(jsonify(prediction_list_schema.dump(predictions)), 200)
+
+
+class PredictionByDeviceLatestResource(Resource):
+    def get(self, device_id):
+        prediction = (
+            db_session.query(PredictionModel)
+            .filter(PredictionModel.device_id == device_id)
+            .order_by(PredictionModel.id.desc())
+            .first()
+        )
+        if prediction is None:
+            return make_response(jsonify({"message": "No predictions found for this device"}), 404)
+
+        return make_response(jsonify(prediction_schema.dump(prediction)), 200)

@@ -2,8 +2,10 @@ from datetime import datetime
 from flask import request, jsonify, make_response
 from flask_restful import Resource
 from marshmallow import ValidationError
+from sqlalchemy import select
 
 from db.init import db_session
+from models.device_model import DeviceModel
 from models.fill_level_model import FillLevelModel
 from schemas import FillLevelSchema
 
@@ -63,3 +65,29 @@ class FillLevelListResource(Resource):
     def get(self):
         fill_levels = db_session.query(FillLevelModel).all()
         return make_response(jsonify(fill_level_list_schema.dump(fill_levels)), 200)
+
+
+class FillLevelDeviceService:
+    @staticmethod
+    def get_by_device_id(device_id):
+        device = db_session.execute(
+            select(DeviceModel).where(DeviceModel.id == device_id)
+        ).scalar_one_or_none()
+        if device is None:
+            return make_response(jsonify({"message": "Device not found"}), 404)
+
+        fill_level = db_session.execute(
+            select(FillLevelModel).where(FillLevelModel.device_id == device_id)
+        ).scalars().all()
+        if not fill_level:
+            return make_response(jsonify({"message": "No fill level data found for this device"}), 404)
+
+        return make_response(
+            jsonify({"fill_level": fill_level_schema.dump(fill_level, many=True)}),
+            200,
+        )
+
+
+class FillLevelDeviceResource(Resource):
+    def get(self, device_id):
+        return FillLevelDeviceService.get_by_device_id(device_id)

@@ -18,12 +18,20 @@ from models.device_model import DeviceModel
 from models.image_model import ImageModel
 from models.prediction_model import LabelTypes, PredictionModel
 from models.user_model import UserModel
-from models.fill_level_model import FillLevelModel
 
 from services.device_service import DeviceListResource, DeviceResource
-from services.fill_level_service import FillLevelListResource, FillLevelResource, fill_level_schema
+from services.fill_level_service import (
+    FillLevelDeviceResource,
+    FillLevelListResource,
+    FillLevelResource,
+)
 from services.image_service import ImageListResource, ImageResource
-from services.prediction_service import PredictionListResource, PredictionResource
+from services.prediction_service import (
+    PredictionByDeviceLatestResource,
+    PredictionByDeviceListResource,
+    PredictionListResource,
+    PredictionResource,
+)
 from services.user_service import UserListResource, UserResource
 from schemas.device_schema import DeviceSchema
 
@@ -48,9 +56,12 @@ api.add_resource(DeviceListResource, "/api/devices")
 
 api.add_resource(PredictionResource, "/api/prediction/<int:prediction_id>", "/api/prediction")
 api.add_resource(PredictionListResource, "/api/predictions")
+api.add_resource(PredictionByDeviceListResource, "/api/predictions/device/<int:device_id>")
+api.add_resource(PredictionByDeviceLatestResource, "/api/predictions/device/<int:device_id>/latest")
 
 api.add_resource(FillLevelResource, "/api/fill_level/<int:fill_level_id>", "/api/fill_level")
 api.add_resource(FillLevelListResource, "/api/fill_levels")
+api.add_resource(FillLevelDeviceResource, "/api/fill_level/device/<int:device_id>")
 
 api.add_resource(UserResource, "/api/user/<int:user_id>", "/api/user")
 api.add_resource(UserListResource, "/api/users")
@@ -227,20 +238,6 @@ def update_device_status():
     db_session.commit()
 
     return make_response(jsonify({"message": "Device status updated successfully"}), 200)
-
-@app.route("/api/fill_level/device/<int:device_id>", methods=["GET"])
-def get_fill_level(device_id):
-    device = db_session.execute(
-        select(DeviceModel).where(DeviceModel.id == device_id)
-    ).scalar_one_or_none()
-    if device is None:
-        return make_response(jsonify({"message": "Device not found"}), 404)
-    fill_level = db_session.execute(
-        select(FillLevelModel).where(FillLevelModel.device_id == device_id)
-    ).scalars().all()
-    if not fill_level:
-        return make_response(jsonify({"message": "No fill level data found for this device"}), 404)
-    return make_response(jsonify({"fill_level": fill_level_schema.dump(fill_level, many=True)}), 200)
 
 @app.route("/api/login", methods=["POST"])
 def login():

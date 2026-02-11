@@ -503,6 +503,48 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Prediction'
+  /api/predictions/device/{device_id}:
+    get:
+      tags: [Predictions]
+      summary: List predictions by device (newest first)
+      parameters:
+        - in: path
+          name: device_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Predictions for device
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Prediction'
+  /api/predictions/device/{device_id}/latest:
+    get:
+      tags: [Predictions]
+      summary: Get latest prediction by device
+      parameters:
+        - in: path
+          name: device_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Latest prediction for device
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prediction'
+        "404":
+          description: No predictions found for this device
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
   /api/fill_level/{fill_level_id}:
     get:
       tags: ["Fill Levels"]
@@ -639,9 +681,9 @@ paths:
                   fill_level:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Prediction'
+                      $ref: '#/components/schemas/FillLevel'
         "404":
-          description: Device not found or no predictions for device
+          description: Device not found or no fill level data found for this device
           content:
             application/json:
               schema:
