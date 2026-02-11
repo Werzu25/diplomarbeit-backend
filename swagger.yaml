@@ -74,6 +74,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
   /api/images/save:
     post:
       tags: [Images]
@@ -612,6 +618,34 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/FillLevel'
+  /api/fill_level/device/{device_id}:
+    get:
+      tags: ["Fill Levels"]
+      summary: Get fill levels by device
+      parameters:
+        - in: path
+          name: device_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Fill levels for device
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fill_level:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Prediction'
+        "404":
+          description: Device not found or no predictions for device
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessage'
   /api/user/{user_id}:
     get:
       tags: [Users]
@@ -745,7 +779,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         "400":
-          description: Missing credentials or already logged in
+          description: Missing credentials
           content:
             application/json:
               schema:
@@ -775,7 +809,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiMessage'
-        "400":
+        "401":
           description: Missing or invalid token
           content:
             application/json:

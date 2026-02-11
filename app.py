@@ -227,6 +227,20 @@ def update_device_status():
 
     return make_response(jsonify({"message": "Device status updated successfully"}), 200)
 
+@app.route("/api/fill_level/device/<int:device_id>", methods=["GET"])
+def get_fill_level(device_id):
+    device = db_session.execute(
+        select(DeviceModel).where(DeviceModel.id == device_id)
+    ).scalar_one_or_none()
+    if device is None:
+        return make_response(jsonify({"message": "Device not found"}), 404)
+    fill_level = db_session.execute(
+        select(PredictionModel).where(PredictionModel.device_id == device_id)
+    ).scalars().all()
+    if not fill_level:
+        return make_response(jsonify({"message": "No predictions found for this device"}), 404)
+    return make_response(jsonify({"fill_level": fill_level}), 200)
+
 @app.route("/api/login", methods=["POST"])
 def login():
     content = request.get_json(silent=True) or {}
