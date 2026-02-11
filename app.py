@@ -18,9 +18,10 @@ from models.device_model import DeviceModel
 from models.image_model import ImageModel
 from models.prediction_model import LabelTypes, PredictionModel
 from models.user_model import UserModel
-from schemas import user_schema
+from models.fill_level_model import FillLevelModel
+
 from services.device_service import DeviceListResource, DeviceResource
-from services.fill_level_service import FillLevelListResource, FillLevelResource
+from services.fill_level_service import FillLevelListResource, FillLevelResource, fill_level_schema
 from services.image_service import ImageListResource, ImageResource
 from services.prediction_service import PredictionListResource, PredictionResource
 from services.user_service import UserListResource, UserResource
@@ -235,11 +236,11 @@ def get_fill_level(device_id):
     if device is None:
         return make_response(jsonify({"message": "Device not found"}), 404)
     fill_level = db_session.execute(
-        select(PredictionModel).where(PredictionModel.device_id == device_id)
+        select(FillLevelModel).where(FillLevelModel.device_id == device_id)
     ).scalars().all()
     if not fill_level:
-        return make_response(jsonify({"message": "No predictions found for this device"}), 404)
-    return make_response(jsonify({"fill_level": fill_level}), 200)
+        return make_response(jsonify({"message": "No fill level data found for this device"}), 404)
+    return make_response(jsonify({"fill_level": fill_level_schema.dump(fill_level, many=True)}), 200)
 
 @app.route("/api/login", methods=["POST"])
 def login():
