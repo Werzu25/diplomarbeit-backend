@@ -199,7 +199,7 @@ def get_image(image_path):
         return send_file(os.path.join(IMAGE_SAVE_PATH, image_path), mimetype='image/png')
     return make_response(jsonify({"message": "Image not found"}), 404)
 
-@app.route("/api/device/regeister", methods=["POST"])
+@app.route("/api/device/register", methods=["POST"])
 def register_device():
     content = request.get_json(silent=True) or {}
     device_name = content.get("device_name")
