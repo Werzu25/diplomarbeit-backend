@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG PYTHON_VERSION=3.12.9
+ARG PYTHON_VERSION=3.13.2
 FROM python:${PYTHON_VERSION}-slim as base
 
 # Install uv
@@ -7,6 +7,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Disable development dependencies
 ENV UV_NO_DEV=1
+ENV UV_PYTHON_PREFERENCE=only-system
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
