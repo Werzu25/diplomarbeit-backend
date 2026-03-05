@@ -154,7 +154,7 @@ def predict_image():
     if images is None:
         return payload_or_response  # already a response object
     content = payload_or_response
-
+    print(str(content))
     if content.get("device_name") is None:
         return make_response(jsonify({"message": "Device name is required"}), 400)
     try:
