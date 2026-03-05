@@ -13,7 +13,7 @@ from PIL import Image
 from sqlalchemy import select
 
 from db.init import db_session, init_db
-from image_classification.modelTools import predict
+from image_classification.modelTools import ModelLoadError, predict
 from models.device_model import DeviceModel
 from models.image_model import ImageModel
 from models.prediction_model import LabelTypes, PredictionModel
@@ -77,6 +77,8 @@ def decode_image(image_data):
 def get_image_predictions(decoded_image, model_path=MODEL_PATH):
     try:
         return predict(decoded_image, model_path)
+    except ModelLoadError as e:
+        raise RuntimeError(f"Prediction failed: {e}") from e
     except Exception as e:
         raise ValueError(f"Prediction failed: {e}")
 
@@ -164,6 +166,8 @@ def predict_image():
             
     except ValueError as e:
         return make_response(jsonify({"message": f"{e}"}), 400)
+    except RuntimeError as e:
+        return make_response(jsonify({"message": f"{e}"}), 500)
     
     except Exception as e:
         return make_response(jsonify({"message": f"An unexpected error occurred: {e}"}), 500)
@@ -184,6 +188,8 @@ def save_image():
         save_predictions(zip(decoded_images, predictions), content.get("device_name"))
     except ValueError as e:
         return make_response(jsonify({"message": f"{e}"}), 400)
+    except RuntimeError as e:
+        return make_response(jsonify({"message": f"{e}"}), 500)
 
     return make_response(jsonify({"message": "Images saved successfully"}), 201)
 

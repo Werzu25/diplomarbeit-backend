@@ -1,4 +1,6 @@
 import os
+import zipfile
+from functools import lru_cache
 import torch
 import tqdm
 from dotenv import load_dotenv
@@ -16,6 +18,11 @@ transforms = weights.transforms()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 AMP_ENABLED = (device.type == "cuda")
+
+
+class ModelLoadError(RuntimeError):
+    """Raised when a model checkpoint cannot be loaded."""
+    pass
 
 
 def build_loaders(datafolder: str, batch_size: int = 64):
@@ -86,7 +93,40 @@ def save_model(model, class_names, path):
     )
 
 
+def _is_lfs_pointer(path):
+    try:
+        with open(path, "rb") as f:
+            first_line = f.readline(256)
+        return first_line.startswith(b"version https://git-lfs.github.com/spec")
+    except Exception:
+        return False
+
+
+def _validate_checkpoint_file(path):
+    if not os.path.exists(path):
+        raise ModelLoadError(f"Model file does not exist: {path}")
+    if not os.path.isfile(path):
+        raise ModelLoadError(f"Model path is not a file: {path}")
+    size = os.path.getsize(path)
+    if size == 0:
+        raise ModelLoadError(f"Model file is empty: {path}")
+    if _is_lfs_pointer(path):
+        raise ModelLoadError(
+            f"Model file at {path} is a Git-LFS pointer, not actual weights. "
+            "Fetch real model weights before starting the API."
+        )
+    if zipfile.is_zipfile(path):
+        try:
+            with zipfile.ZipFile(path, "r") as zf:
+                zf.testzip()
+        except Exception as e:
+            raise ModelLoadError(f"Model checkpoint zip is corrupted: {path}: {e}") from e
+
+
+@lru_cache(maxsize=4)
 def load_model(path):
+    path = os.path.abspath(path)
+    _validate_checkpoint_file(path)
     try:
         checkpoint = torch.load(path, map_location=device)
         class_names = checkpoint["class_names"]
@@ -95,7 +135,7 @@ def load_model(path):
         model.to(device).eval()
         return model, class_names
     except Exception as e:
-        raise RuntimeError(f"Failed to load model from {path}: {e}")
+        raise ModelLoadError(f"Failed to load model from {path}: {e}") from e
 
 def train_model(
     datafolder,
@@ -188,8 +228,10 @@ def predict(input_image, model_weights_path, topk=4):
             probs = torch.softmax(logits, dim=1).squeeze(0)
             top_probs, top_idxs = torch.topk(probs, k=topk)
         return [(class_names[i], float(p)) for i, p in zip(top_idxs.tolist(), top_probs.tolist())]
-    except RuntimeError as e:
-        raise RuntimeError(e)
+    except ModelLoadError:
+        raise
+    except Exception as e:
+        raise RuntimeError(e) from e
 
 if __name__ == "__main__":
     from ImageClassifierDataset import ImageClassifierDataset
