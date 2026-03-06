@@ -9,6 +9,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ENV UV_NO_DEV=1
 ENV UV_PYTHON_PREFERENCE=only-system
 ENV TORCH_HOME=/home/appuser/.cache/torch
+ENV GUNICORN_CMD_ARGS="--bind=0.0.0.0:80 --timeout=180 --graceful-timeout=30 --keep-alive=10 --worker-tmp-dir=/dev/shm"
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -59,4 +60,4 @@ RUN --mount=type=cache,target=/home/appuser/.cache/torch,uid=${UID} \
 EXPOSE 80
 
 # Run the application.
-CMD ["uv", "run", "gunicorn", "app:app", "--bind=0.0.0.0:80"]
+CMD ["uv", "run", "gunicorn", "app:app"]

@@ -11,6 +11,7 @@ from flask_restful import Api
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
 from PIL import Image
 from sqlalchemy import select
+from werkzeug.exceptions import RequestEntityTooLarge
 
 from db.init import db_session, init_db
 from image_classification.modelTools import ModelLoadError, load_model, predict
@@ -37,6 +38,7 @@ from schemas.device_schema import DeviceSchema
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "jwt-secret-key")
+app.config["MAX_CONTENT_LENGTH"] = int(os.getenv("MAX_REQUEST_MB", "25")) * 1024 * 1024
 
 CORS(app)
 api = Api(app)
@@ -149,6 +151,15 @@ def _parse_images_from_request():
 @app.route("/")
 def home():
     return "Welcome to the Image Classification API"
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_request_too_large(_error):
+    size_mb = app.config["MAX_CONTENT_LENGTH"] // (1024 * 1024)
+    return make_response(
+        jsonify({"message": f"Request too large. Max payload is {size_mb}MB"}),
+        413,
+    )
 
 
 @app.route("/api/images/predict", methods=["POST"])
