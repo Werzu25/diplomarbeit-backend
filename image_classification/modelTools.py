@@ -130,7 +130,9 @@ def load_model(path):
     try:
         checkpoint = torch.load(path, map_location=device)
         class_names = checkpoint["class_names"]
-        model = ImageClassifierModel(num_classes=len(class_names))
+        # We load the full trained checkpoint, so no internet-backed torchvision
+        # weights are required at inference time.
+        model = ImageClassifierModel(num_classes=len(class_names), weights=None)
         model.load_state_dict(checkpoint["model_state"])
         model.to(device).eval()
         return model, class_names
@@ -145,10 +147,12 @@ def train_model(
     num_classes=4,
     model_path="models/classifier_best.pth",
     label_smoothing=0.0,
+    use_imagenet_backbone=False,
 ):
     train_dataset, val_dataset, train_loader, val_loader = build_loaders(datafolder, batch_size)
 
-    model = ImageClassifierModel(num_classes=num_classes).to(device)
+    init_weights = ResNet152_Weights.DEFAULT if use_imagenet_backbone else None
+    model = ImageClassifierModel(num_classes=num_classes, weights=init_weights).to(device)
 
     # Optional speed on Ampere+ GPUs
     if device.type == "cuda":

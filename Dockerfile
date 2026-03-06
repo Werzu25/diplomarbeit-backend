@@ -8,6 +8,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # Disable development dependencies
 ENV UV_NO_DEV=1
 ENV UV_PYTHON_PREFERENCE=only-system
+ENV TORCH_HOME=/home/appuser/.cache/torch
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -45,6 +46,14 @@ COPY --chown=appuser:appuser . .
 # Sync the project
 RUN --mount=type=cache,target=/home/appuser/.cache/uv,uid=${UID} \
     uv sync --locked
+
+# Optional: bake torchvision weights into the image at build time.
+# Example: docker build --build-arg PRELOAD_TORCHVISION_WEIGHTS=1 .
+ARG PRELOAD_TORCHVISION_WEIGHTS=0
+RUN --mount=type=cache,target=/home/appuser/.cache/torch,uid=${UID} \
+    if [ "$PRELOAD_TORCHVISION_WEIGHTS" = "1" ]; then \
+      uv run python -c "from torchvision.models import ResNet152_Weights; ResNet152_Weights.DEFAULT.get_state_dict(progress=True)"; \
+    fi
 
 # Expose the port that the application listens on.
 EXPOSE 80

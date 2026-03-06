@@ -1,13 +1,12 @@
 from torch import nn
-from torchvision.models import resnet152, ResNet152_Weights
+from torchvision.models import resnet152
 
 
 class ImageClassifierModel(nn.Module):
-    def __init__(self, num_classes=4):
+    def __init__(self, num_classes=4, weights=None):
         super(ImageClassifierModel, self).__init__()
         self.num_classes = num_classes
-        self.weights = ResNet152_Weights.DEFAULT
-        self.features = resnet152(weights=self.weights)
+        self.features = resnet152(weights=weights)
 
         in_features = self.features.fc.in_features
         self.features.fc = nn.Linear(in_features, num_classes)

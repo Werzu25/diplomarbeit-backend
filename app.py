@@ -13,7 +13,7 @@ from PIL import Image
 from sqlalchemy import select
 
 from db.init import db_session, init_db
-from image_classification.modelTools import ModelLoadError, predict
+from image_classification.modelTools import ModelLoadError, load_model, predict
 from models.device_model import DeviceModel
 from models.image_model import ImageModel
 from models.prediction_model import LabelTypes, PredictionModel
@@ -47,6 +47,9 @@ device_schema = DeviceSchema()
 
 MODEL_PATH = os.getenv("MODEL_PATH", "image_classification/models/model.pth")
 IMAGE_SAVE_PATH = os.getenv("IMAGE_SAVE_PATH", "./images")
+
+# Warm model cache at startup to avoid first-request latency/timeouts.
+load_model(MODEL_PATH)
 
 api.add_resource(ImageResource, "/api/image/<int:image_id>", "/api/image")
 api.add_resource(ImageListResource, "/api/images")
