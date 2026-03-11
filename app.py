@@ -38,7 +38,7 @@ from schemas.device_schema import DeviceSchema
 
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET", "jwt-secret-key")
-app.config["MAX_CONTENT_LENGTH"] = int(os.getenv("MAX_REQUEST_MB", "25")) * 1024 * 1024
+app.config["MAX_CONTENT_LENGTH"] = int(os.getenv("MAX_REQUEST_MB", "25")) * 10 * 1024 * 1024
 
 CORS(app)
 api = Api(app)
