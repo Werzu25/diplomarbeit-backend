@@ -10,7 +10,7 @@
 services:
   db:
     image: postgres
-    restart: unless-stopped
+    restart: always
     user: postgres
 
     secrets:
@@ -33,7 +33,6 @@ services:
       retries: 5
 
   server:
-    restart: unless-stopped
     build:
       context: .
     env_file:

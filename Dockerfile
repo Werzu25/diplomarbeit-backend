@@ -60,4 +60,4 @@ RUN --mount=type=cache,target=/home/appuser/.cache/torch,uid=${UID} \
 EXPOSE 80
 
 # Run the application.
-CMD ["uv", "run", "gunicorn", "app:app"]
+CMD ["uv", "run", "gunicorn", "app:app", "--bind=0.0.0.0:80"]

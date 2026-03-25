@@ -93,14 +93,16 @@ def save_model(model, class_names, path):
     )
 
 
-def _is_lfs_pointer(path):
+def load_model(path):
     try:
-        with open(path, "rb") as f:
-            first_line = f.readline(256)
-        return first_line.startswith(b"version https://git-lfs.github.com/spec")
-    except Exception:
-        return False
-
+        checkpoint = torch.load(path, map_location=device)
+        class_names = checkpoint["class_names"]
+        model = ImageClassifierModel(num_classes=len(class_names))
+        model.load_state_dict(checkpoint["model_state"])
+        model.to(device).eval()
+        return model, class_names
+    except Exception as e:
+        raise RuntimeError(f"Failed to load model from {path}: {e}")
 
 def _validate_checkpoint_file(path):
     if not os.path.exists(path):
@@ -232,10 +234,8 @@ def predict(input_image, model_weights_path, topk=4):
             probs = torch.softmax(logits, dim=1).squeeze(0)
             top_probs, top_idxs = torch.topk(probs, k=topk)
         return [(class_names[i], float(p)) for i, p in zip(top_idxs.tolist(), top_probs.tolist())]
-    except ModelLoadError:
-        raise
-    except Exception as e:
-        raise RuntimeError(e) from e
+    except RuntimeError as e:
+        raise RuntimeError(e)
 
 if __name__ == "__main__":
     from ImageClassifierDataset import ImageClassifierDataset

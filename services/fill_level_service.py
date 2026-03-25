@@ -5,7 +5,6 @@ from marshmallow import ValidationError
 from sqlalchemy import select
 
 from db.init import db_session
-from models.device_model import DeviceModel
 from models.fill_level_model import FillLevelModel
 from schemas import FillLevelSchema
 
@@ -30,7 +29,6 @@ class FillLevelResource(Resource):
             return make_response(jsonify({"message": str(e)}), 400)
         except Exception as e:
             return make_response(jsonify({"message": str(e)}), 500)
-        new_fill_level.last_update = datetime.now()
 
         db_session.add(new_fill_level)
         db_session.commit()

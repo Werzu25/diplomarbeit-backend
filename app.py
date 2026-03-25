@@ -5,7 +5,7 @@ import uuid
 import hashlib
 from datetime import datetime
 
-from flask import Flask, jsonify, make_response, redirect, request, send_file, url_for
+from flask import Flask, jsonify, make_response, request, send_file, url_for
 from flask_cors import CORS
 from flask_restful import Api
 from flask_jwt_extended import JWTManager, create_access_token, get_jwt, jwt_required
@@ -13,8 +13,8 @@ from PIL import Image
 from sqlalchemy import select
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from db.init import db_session, init_db
-from image_classification.modelTools import ModelLoadError, load_model, predict
+from database.init import db_session, init_db
+from image_classification.modelTools import predict
 from models.device_model import DeviceModel
 from models.image_model import ImageModel
 from models.prediction_model import LabelTypes, PredictionModel
@@ -80,12 +80,7 @@ def decode_image(image_data):
 
 
 def get_image_predictions(decoded_image, model_path=MODEL_PATH):
-    try:
-        return predict(decoded_image, model_path)
-    except ModelLoadError as e:
-        raise RuntimeError(f"Prediction failed: {e}") from e
-    except Exception as e:
-        raise ValueError(f"Prediction failed: {e}")
+    return predict(decoded_image, model_path)
 
 def get_device_by_name(device_name):
     device = db_session.execute(
@@ -175,17 +170,9 @@ def predict_image():
         decoded_images = [decode_image(image) for image in images]
         predictions = [get_image_predictions(image) for image in decoded_images]
 
-        if content.get("save_images", True):
-            save_predictions(zip(decoded_images, predictions), content.get("device_name"))
-            
-    except ValueError as e:
-        return make_response(jsonify({"message": f"{e}"}), 400)
-    except RuntimeError as e:
-        return make_response(jsonify({"message": f"{e}"}), 500)
-    
-    except Exception as e:
-        return make_response(jsonify({"message": f"An unexpected error occurred: {e}"}), 500)
-    
+    if content.get("save_images", True):
+        save_predictions(zip(decoded_images, predictions), content.get("device_name"))
+
     return make_response(jsonify(predictions), 200)
 
 
@@ -196,14 +183,9 @@ def save_image():
         return payload_or_response
     content = payload_or_response
 
-    try:
-        decoded_images = [decode_image(image) for image in images]
-        predictions = [get_image_predictions(image) for image in decoded_images]
-        save_predictions(zip(decoded_images, predictions), content.get("device_name"))
-    except ValueError as e:
-        return make_response(jsonify({"message": f"{e}"}), 400)
-    except RuntimeError as e:
-        return make_response(jsonify({"message": f"{e}"}), 500)
+    decoded_images = [decode_image(image) for image in images]
+    predictions = [get_image_predictions(image) for image in decoded_images]
+    save_predictions(zip(decoded_images, predictions), content.get("device_name"))
 
     return make_response(jsonify({"message": "Images saved successfully"}), 201)
 
@@ -286,10 +268,6 @@ def login():
 def logout():
     _ = get_jwt()
     return make_response(jsonify({"message": "Logout successful"}), 200)
-
-@app.route("/favicon.ico")
-def favicon():
-    return redirect(url_for("static", filename="static/assets/favicon.ico"))
 
 def main():
     app.run(debug=True)
